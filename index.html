@@ -213,6 +213,31 @@
   .pill .em{font-size:19px;line-height:1;}
   .pill:active{transform:translateY(2px);}
 
+  /* ---------- tablet / wide layout: right-side history ---------- */
+  .main-col{min-width:0;}
+  .recent-empty{font-size:14px;font-weight:700;color:var(--muted);padding:10px 6px;margin:0;}
+  @media (min-width:680px){
+    .app{
+      max-width:860px;padding:20px 24px 48px;
+      display:grid;grid-template-columns:minmax(0,1fr) 244px;gap:22px;align-items:start;
+    }
+    .shelf-recent{
+      margin-top:0;position:sticky;top:18px;
+      background:rgba(255,255,255,.88);border:2px solid #F1E9E0;border-radius:24px;
+      padding:14px 12px;max-height:calc(100dvh - 44px);overflow-y:auto;
+      box-shadow:0 8px 22px rgba(120,110,140,.06);
+    }
+    .shelf-recent[hidden]{display:block!important;}
+    .shelf-recent .row{flex-direction:column;overflow-x:visible;gap:7px;padding:2px 0;}
+    .shelf-recent .pill{
+      width:100%;justify-content:space-between;height:auto;min-height:44px;
+      padding:8px 13px;border-radius:16px;
+    }
+    .shelf-recent .pill .p-left{display:inline-flex;align-items:center;gap:7px;min-width:0;}
+    .shelf-recent .pill .p-w{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .shelf-recent .pill .p-ipa{font-size:13px;font-weight:700;color:var(--muted);flex:0 0 auto;}
+  }
+
   /* ---------- star stamp & toast ---------- */
   .stamp{
     position:fixed;top:76px;left:50%;z-index:30;pointer-events:none;
@@ -269,28 +294,30 @@
 </svg>
 
 <div class="app">
-  <header>
-    <h1>Saeyeon's Word Book <span class="chick">🐣</span></h1>
-    <div class="stars" aria-label="Stars today">⭐ <span id="starN">0</span></div>
-  </header>
+  <div class="main-col">
+    <header>
+      <h1>Saeyeon's Word Book <span class="chick">🐣</span></h1>
+      <div class="stars" aria-label="Stars today">⭐ <span id="starN">0</span></div>
+    </header>
 
-  <form class="search" id="searchForm" role="search" autocomplete="off">
-    <input id="q" type="text" name="q" placeholder="Type a word" inputmode="search"
-           enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false"
-           aria-label="Type a word">
-    <button class="clear" id="clearBtn" type="button" aria-label="Clear">✕</button>
-    <button class="go" type="submit" aria-label="Search">🔍</button>
-  </form>
+    <form class="search" id="searchForm" role="search" autocomplete="off">
+      <input id="q" type="text" name="q" placeholder="Type a word" inputmode="search"
+             enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false"
+             aria-label="Type a word">
+      <button class="clear" id="clearBtn" type="button" aria-label="Clear">✕</button>
+      <button class="go" type="submit" aria-label="Search">🔍</button>
+    </form>
 
-  <div class="result" id="result"></div>
+    <div class="result" id="result"></div>
 
-  <section class="shelf" id="shelfSaved" hidden>
-    <div class="shelf-head"><h3>⭐ My words</h3></div>
-    <div class="row" id="rowSaved"></div>
-  </section>
+    <section class="shelf" id="shelfSaved" hidden>
+      <div class="shelf-head"><h3>⭐ My words</h3></div>
+      <div class="row" id="rowSaved"></div>
+    </section>
+  </div>
 
-  <section class="shelf" id="shelfRecent" hidden>
-    <div class="shelf-head"><h3>🕒 Recent</h3><button type="button" id="clearRecent">clear</button></div>
+  <section class="shelf shelf-recent" id="shelfRecent" hidden>
+    <div class="shelf-head"><h3>🕒 History</h3><button type="button" id="clearRecent">clear</button></div>
     <div class="row" id="rowRecent"></div>
   </section>
 </div>
@@ -994,7 +1021,7 @@ function sparkle(btn){
 function paintMessage(kind, word){
   current = null;
   const map = {
-    welcome:  {face: '🐣', title: 'Pick a word!',     note: 'Tap a picture, or type a word.'},
+    welcome:  {face: '🐣', title: 'Type a word!',     note: 'Type a word from your book.'},
     thinking: {face: '🐥', title: 'Looking…',         note: ''},
     letters:  {face: '🙈', title: 'English letters!', note: 'Type the word in English letters.'},
     notfound: {face: '🙈', title: 'Oops, not found',  note: 'Let’s check the spelling once more.'},
@@ -1078,7 +1105,7 @@ function praise(){
 
 /* ---------- saved & recent ---------- */
 function addRecent(w){
-  recent = [w].concat(recent.filter(x => x !== w)).slice(0, 8);
+  recent = [w].concat(recent.filter(x => x !== w)).slice(0, 30);
   writeJSON('sw.recent.v1', recent);
   renderRecent();
 }
@@ -1121,8 +1148,26 @@ function renderSaved(){
 function renderRecent(){
   const box = $('#shelfRecent'), row = $('#rowRecent');
   row.innerHTML = '';
-  recent.forEach(w => row.appendChild(chip(w, emojiFor(w))));
-  box.hidden = recent.length === 0;
+  if (recent.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'recent-empty';
+    p.textContent = 'Words you search will stay here.';
+    row.appendChild(p);
+    box.hidden = true;
+    return;
+  }
+  recent.forEach(w => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pill';
+    const d = LOCAL_MAP.get(w) || cache[w];
+    const ipa = (d && d.ipa) ? d.ipa : '';
+    b.innerHTML = '<span class="p-left"><span class="p-w">' + esc(w) + '</span></span>' +
+                  (ipa ? '<span class="p-ipa">' + esc(ipa) + '</span>' : '');
+    b.addEventListener('click', () => { inputEl.value = w; refreshClear(); show(w); });
+    row.appendChild(b);
+  });
+  box.hidden = false;
 }
 
 /* ---------- toast ---------- */
