@@ -47,15 +47,53 @@
   .scenery .star{fill:#F2D98A;}
   .app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:16px 16px 44px;}
 
-  /* ---------- header ---------- */
+  /* ---------- header & pet growth ---------- */
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 4px 14px;}
   h1{font-size:21px;font-weight:900;letter-spacing:-.4px;margin:0;display:flex;align-items:center;gap:7px;color:#463B4E;}
   h1 .chick{font-size:24px;}
-  .stars{
-    flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
-    height:38px;padding:0 13px;border-radius:19px;background:#FFF6DA;
-    border:2px solid #FBE9B4;color:#8A6A1F;font-size:16px;font-weight:900;
+  .pet-badge{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;
+    height:42px;padding:0 13px 0 10px;border-radius:21px;background:#FFF7E4;
+    border:2px solid #F7DFB0;color:#6E5120;font:inherit;cursor:pointer;
+    box-shadow:0 3px 10px rgba(180,140,60,.08);
   }
+  .pet-badge:active{transform:translateY(1px);}
+  .pet-em{font-size:23px;line-height:1;}
+  .pet-meta{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:58px;}
+  .pet-top{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;font-size:12px;font-weight:900;line-height:1;}
+  .pet-bar{width:100%;height:6px;border-radius:999px;background:#F3E2BD;overflow:hidden;}
+  .pet-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#FF9B71,#FF6F61);transition:width .3s ease;}
+
+  .pet-modal{
+    position:fixed;inset:0;z-index:40;background:rgba(48,38,58,.36);
+    display:none;align-items:center;justify-content:center;padding:18px;
+  }
+  .pet-modal.open{display:flex;}
+  .pet-sheet{
+    width:100%;max-width:420px;max-height:82dvh;overflow-y:auto;background:#FFFDF9;border-radius:26px;padding:20px 18px 18px;
+    border:2px solid #F2E8DA;box-shadow:0 18px 40px rgba(60,45,80,.18);
+  }
+  .pet-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .pet-sheet-head h2{margin:0;font-size:18px;font-weight:900;color:var(--ink);}
+  .pet-close{width:34px;height:34px;border:0;border-radius:50%;background:#F4EFF6;color:#7C6E85;font-size:16px;font-weight:900;cursor:pointer;}
+  .pet-now{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;
+    background:#FFF7E4;border:1.5px solid #F6E0B5;margin-bottom:14px;
+  }
+  .pet-now-em{font-size:40px;line-height:1;}
+  .pet-now-info b{display:block;font-size:16px;font-weight:900;color:#5D4216;}
+  .pet-now-info small{display:block;font-size:13px;font-weight:800;color:#8D6E35;margin-top:2px;}
+  .pet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .pet-node{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:9px 4px;border-radius:14px;border:1.5px solid #EFE8F3;background:#fff;
+    text-align:center;
+  }
+  .pet-node.done{background:#F7FCF9;border-color:#CBEEDF;}
+  .pet-node.cur{background:#FFF6DF;border-color:#F5CA7B;box-shadow:0 3px 10px rgba(220,170,60,.16);}
+  .pet-node.lock{opacity:.48;background:#F7F5F9;}
+  .pet-node .ne{font-size:24px;line-height:1;}
+  .pet-node .nl{font-size:11px;font-weight:800;color:#5C4F64;line-height:1.1;}
 
   /* ---------- search ---------- */
   form.search{
@@ -297,7 +335,13 @@
   <div class="main-col">
     <header>
       <h1>Saeyeon's Word Book <span class="chick">🐣</span></h1>
-      <div class="stars" aria-label="Stars today">⭐ <span id="starN">0</span></div>
+      <button type="button" class="pet-badge" id="petBadge" aria-label="My Pet Growth">
+        <span class="pet-em" id="petEm">🥚</span>
+        <span class="pet-meta">
+          <span class="pet-top"><span id="petName">Egg</span><span id="petProg">0/3</span></span>
+          <span class="pet-bar"><span class="pet-fill" id="petFill" style="width:0%"></span></span>
+        </span>
+      </button>
     </header>
 
     <form class="search" id="searchForm" role="search" autocomplete="off">
@@ -324,6 +368,16 @@
 
 <div class="stamp" id="stamp" aria-live="polite"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="pet-modal" id="petModal" role="dialog" aria-modal="true" aria-labelledby="petModalTitle">
+  <div class="pet-sheet">
+    <div class="pet-sheet-head">
+      <h2 id="petModalTitle">🩺 Vet Saeyeon's Pets</h2>
+      <button type="button" class="pet-close" id="petClose" aria-label="Close">✕</button>
+    </div>
+    <div class="pet-now" id="petNow"></div>
+    <div class="pet-grid" id="petGrid"></div>
+  </div>
+</div>
 
 <script>
 /* =====================================================================
@@ -707,18 +761,93 @@ let saved  = readJSON('sw.saved.v1', []);      // [{w,ipa,e,ex,audio}]
 let recent = readJSON('sw.recent.v1', []);     // [word]
 let cache  = readJSON('sw.cache.v1', {});      // {word:{w,ipa,audio,e}}
 
-/* ---------- today's stars ---------- */
-const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
-let stars = readJSON('sw.stars.v1', {d: '', n: 0, words: []});
-if (!stars || stars.d !== todayKey()) stars = {d: todayKey(), n: 0, words: []};
-function renderStars(){ $('#starN').textContent = stars.n; }
-function addStar(w){
-  if (stars.words.indexOf(w) > -1) return false;
-  stars.words.push(w); stars.n += 1;
-  if (stars.words.length > 300) stars.words = stars.words.slice(-300);
-  writeJSON('sw.stars.v1', stars);
-  renderStars();
-  return true;
+/* ---------- pet growth (cumulative unique words) ---------- */
+const PET_STAGES = [
+  {min:0,   e:'🥚', name:'Egg'},
+  {min:3,   e:'🐣', name:'Baby Chick'},
+  {min:6,   e:'🐥', name:'Chick'},
+  {min:9,   e:'🐹', name:'Hamster'},
+  {min:12,  e:'🐭', name:'Mouse'},
+  {min:15,  e:'🐰', name:'Bunny'},
+  {min:19,  e:'🦔', name:'Hedgehog'},
+  {min:23,  e:'🐶', name:'Puppy'},
+  {min:27,  e:'🐱', name:'Kitten'},
+  {min:31,  e:'🐿️', name:'Squirrel'},
+  {min:35,  e:'🐦', name:'Bluebird'},
+  {min:39,  e:'🐢', name:'Turtle'},
+  {min:43,  e:'🐸', name:'Frog'},
+  {min:48,  e:'🦆', name:'Duck'},
+  {min:53,  e:'🦊', name:'Fox'},
+  {min:58,  e:'🐨', name:'Koala'},
+  {min:63,  e:'🐼', name:'Panda'},
+  {min:68,  e:'🐧', name:'Penguin'},
+  {min:74,  e:'🐯', name:'Tiger'},
+  {min:80,  e:'🦁', name:'Lion'},
+  {min:86,  e:'🦒', name:'Giraffe'},
+  {min:92,  e:'🐘', name:'Elephant'},
+  {min:100, e:'🦄', name:'Unicorn'},
+  {min:110, e:'🐉', name:'Dragon'}
+];
+let pet = readJSON('sw.pet.v1', null);
+if (!pet || !Array.isArray(pet.words)) {
+  const old = readJSON('sw.stars.v1', null);
+  const seed = (old && Array.isArray(old.words)) ? old.words.slice() : [];
+  pet = {n: seed.length, words: seed};
+  writeJSON('sw.pet.v1', pet);
+}
+function petState(n){
+  let idx = 0;
+  for (let i = 0; i < PET_STAGES.length; i++) {
+    if (n >= PET_STAGES[i].min) idx = i;
+  }
+  const cur = PET_STAGES[idx];
+  const next = PET_STAGES[idx + 1] || null;
+  if (!next) {
+    const step = (n - cur.min) % 10;
+    return {idx, cur, next: null, have: step, need: 10, pct: (step / 10) * 100};
+  }
+  const span = next.min - cur.min;
+  const have = n - cur.min;
+  return {idx, cur, next, have, need: span, pct: Math.min(100, Math.round((have / span) * 100))};
+}
+function renderPet(){
+  const st = petState(pet.n);
+  $('#petEm').textContent = st.cur.e;
+  $('#petName').textContent = st.cur.name;
+  $('#petProg').textContent = st.have + '/' + st.need;
+  $('#petFill').style.width = st.pct + '%';
+}
+function openPetModal(){
+  const st = petState(pet.n);
+  const remain = st.next ? (st.next.min - pet.n) : (10 - st.have);
+  const sub = st.next
+    ? (pet.n + ' words · ' + remain + ' more to ' + st.next.e + ' ' + st.next.name + '!')
+    : (pet.n + ' words · Max friend!');
+  $('#petNow').innerHTML =
+    '<span class="pet-now-em">' + st.cur.e + '</span>' +
+    '<div class="pet-now-info"><b>Lv.' + (st.idx + 1) + ' ' + esc(st.cur.name) + '</b><small>' + esc(sub) + '</small></div>';
+  const grid = $('#petGrid');
+  grid.innerHTML = '';
+  PET_STAGES.forEach((s, i) => {
+    const d = document.createElement('div');
+    const cls = i < st.idx ? 'done' : (i === st.idx ? 'cur' : 'lock');
+    d.className = 'pet-node ' + cls;
+    d.innerHTML = '<span class="ne">' + (i <= st.idx ? s.e : '❓') + '</span>' +
+                  '<span class="nl">' + (i <= st.idx ? esc(s.name) : (s.min + ' words')) + '</span>';
+    grid.appendChild(d);
+  });
+  $('#petModal').classList.add('open');
+}
+function addPetWord(w){
+  if (pet.words.indexOf(w) > -1) return {added: false, evolved: false};
+  const prevIdx = petState(pet.n).idx;
+  pet.words.push(w);
+  pet.n = pet.words.length;
+  if (pet.words.length > 500) pet.words = pet.words.slice(-500);
+  writeJSON('sw.pet.v1', pet);
+  const nextState = petState(pet.n);
+  renderPet();
+  return {added: true, evolved: nextState.idx > prevIdx, stage: nextState.cur, prog: nextState.have + '/' + nextState.need};
 }
 
 /* ---------- voices & sound ---------- */
@@ -1058,7 +1187,7 @@ async function show(raw){
   if (quick) paintCard(quick);
   else paintMessage('thinking');
   addRecent(w);
-  if (quick && addStar(w)) praise();
+  if (quick) { const res = addPetWord(w); if (res.added) praise(res); }
 
   /* a phrase from the picture book needs no online lookup */
   if (local && w.indexOf(' ') > -1) return;
@@ -1090,17 +1219,19 @@ async function show(raw){
     ex: (base && base.ex) || (quick && quick.ex) || '',
     audio: api.audio || (quick && quick.audio) || ''
   }, {base: base});
-  if (!quick && addStar(w)) praise();
+  if (!quick) { const res = addPetWord(w); if (res.added) praise(res); }
 }
 
 /* ---------- praise stamp ---------- */
 let stampTimer = null;
-function praise(){
+function praise(res){
   const el = $('#stamp');
-  el.textContent = 'Great! ⭐ ' + stars.n;
+  el.textContent = res.evolved
+    ? ('🎉 New Friend! ' + res.stage.e + ' ' + res.stage.name + '!')
+    : (res.stage.e + ' +1 · ' + res.prog);
   el.classList.add('in');
   clearTimeout(stampTimer);
-  stampTimer = setTimeout(() => el.classList.remove('in'), 1100);
+  stampTimer = setTimeout(() => el.classList.remove('in'), res.evolved ? 2000 : 1200);
 }
 
 /* ---------- saved & recent ---------- */
@@ -1199,7 +1330,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) stopS
 window.addEventListener('pagehide', stopSound);
 window.addEventListener('error', e => { try { console.warn('page error', e.message); } catch (err) {} });
 
-renderStars();
+$('#petBadge').addEventListener('click', openPetModal);
+$('#petClose').addEventListener('click', () => $('#petModal').classList.remove('open'));
+$('#petModal').addEventListener('click', e => { if (e.target.id === 'petModal') $('#petModal').classList.remove('open'); });
+
+renderPet();
 renderSaved();
 renderRecent();
 paintMessage('welcome');
