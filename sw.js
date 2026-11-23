@@ -1,6 +1,6 @@
 /* YonyYony Word Book — keeps the app shell available so it opens instantly,
    even with a weak connection. Page updates arrive on the next launch. */
-const CACHE = 'yony-wordbook-v1';
+const CACHE = 'yony-wordbook-v2';
 const SHELL = [
   './',
   './index.html',
@@ -34,16 +34,16 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // dictionary API and voices: straight to the network
 
-  // Navigations: cached shell first, refreshed from the network for the next launch.
+  // Navigations: network first so updates appear immediately; fallback to cache offline.
   if (req.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then((cached) => {
-        const network = fetch(req).then((res) => {
-          if (res && res.ok) caches.open(CACHE).then((c) => c.put('./index.html', res.clone()));
-          return res;
-        }).catch(() => cached);
-        return cached || network;
-      })
+      fetch(req).then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put('./index.html', copy));
+        }
+        return res;
+      }).catch(() => caches.match('./index.html'))
     );
     return;
   }
