@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFCF6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Seoyeon's Word Book</title>
+<meta name="description" content="Seoyeon's English word book with American pronunciation.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.92em' font-size='88'>🐣</text></svg>">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Wordbook">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="Wordbook">
+<style>
+  :root{
+    --ink:#3F3548;
+    --ink-soft:#6C5F72;
+    --muted:#A296AB;
+    --coral:#FF6F61;
+    --mint:#2FB79C;
+    --purple:#6C5CE7;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    min-height:100dvh;
+    font-family:"Nunito","Baloo 2",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Liberation Sans","Noto Sans CJK KR",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 8% -10%, #FFF3E0 0%, rgba(255,243,224,0) 40%),
+      radial-gradient(circle at 100% 0%, #E8F5FF 0%, rgba(232,245,255,0) 42%),
+      linear-gradient(180deg,#FFFCF5 0%,#F7FBFF 52%,#F8F4FF 100%);
+    background-attachment:fixed;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* quiet storybook sky: fixed, very faint, never moves */
+  .scenery{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  .scenery .cloud{fill:#FFFFFF;}
+  .scenery .star{fill:#F2D98A;}
+  .app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:16px 16px 44px;}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 4px 14px;}
+  h1{font-size:21px;font-weight:900;letter-spacing:-.4px;margin:0;display:flex;align-items:center;gap:7px;color:#463B4E;}
+  h1 .chick{font-size:24px;}
+  .stars{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+    height:38px;padding:0 13px;border-radius:19px;background:#FFF6DA;
+    border:2px solid #FBE9B4;color:#8A6A1F;font-size:16px;font-weight:900;
+  }
+
+  /* ---------- search ---------- */
+  form.search{
+    display:flex;align-items:center;gap:6px;
+    background:var(--card);border:2px solid #F1E9E0;border-radius:28px;
+    padding:5px 6px 5px 18px;
+    box-shadow:0 6px 18px rgba(120,110,140,.08);
+  }
+  form.search:focus-within{border-color:#CFE6F5;box-shadow:0 8px 22px rgba(120,150,180,.14);}
+  #q{
+    flex:1;min-width:0;height:54px;border:0;outline:0;background:transparent;
+    font:inherit;font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.2px;
+  }
+  #q::placeholder{color:#C6BBCE;font-weight:700;}
+  .clear{
+    flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;
+    background:#F4EFF6;color:#8E8099;font-size:17px;line-height:1;
+    display:none;align-items:center;justify-content:center;
+  }
+  .clear.show{display:flex;}
+  .go{
+    flex:0 0 auto;width:56px;height:56px;border:0;border-radius:50%;
+    background:linear-gradient(165deg,#FFA98C,#FF7161);color:#fff;font-size:23px;
+    box-shadow:0 4px 0 #E9594B;display:flex;align-items:center;justify-content:center;
+  }
+  .go:active{transform:translateY(2px);box-shadow:0 2px 0 #E9594B;}
+
+  /* ---------- picks ---------- */
+  .picks{display:flex;gap:10px;overflow-x:auto;padding:14px 2px 6px;scrollbar-width:none;}
+  .picks::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;
+    min-height:56px;padding:0 18px;border:2px solid #F1E7DC;border-radius:28px;
+    background:#fff;font:inherit;font-size:18px;font-weight:800;color:#504355;
+    box-shadow:0 3px 0 #F2E9DF;cursor:pointer;
+  }
+  .chip .em{font-size:23px;line-height:1;}
+  .chip:active{transform:translateY(2px);box-shadow:0 1px 0 #F2E9DF;}
+
+  /* ---------- result ---------- */
+  .result{margin-top:14px;}
+  .card{
+    position:relative;background:var(--card);border-radius:34px;padding:14px 16px 18px;
+    box-shadow:0 12px 30px rgba(120,110,140,.12);
+    animation:fade .2s ease-out;
+  }
+  .word{
+    margin:6px 6px 2px;text-align:center;font-size:clamp(40px,13.6vw,60px);
+    font-weight:900;letter-spacing:-1.4px;line-height:1.06;word-break:break-word;
+  }
+  .ipa{
+    text-align:center;margin:0 0 14px;font-family:"Noto Sans","DejaVu Sans","Segoe UI",system-ui,sans-serif;
+    font-size:clamp(25px,7.8vw,33px);font-weight:700;color:var(--purple);letter-spacing:.4px;
+    word-break:break-word;
+  }
+
+  /* the little "from 👉 go" card */
+  .from{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin:0 0 14px;padding:9px 12px;border-radius:20px;
+    background:#FFFAEA;border:2px dashed #F1DFB0;
+  }
+  .from .lb{font-size:15px;font-weight:900;color:#A98A3F;letter-spacing:.02em;}
+  .from .arrow{font-size:17px;}
+  .from .base-word{
+    border:0;background:#fff;padding:0 14px;height:46px;border-radius:15px;
+    font:inherit;font-size:22px;font-weight:900;color:#3F3548;
+    box-shadow:0 2px 0 #EADFC4;cursor:pointer;
+  }
+  .from .base-word:active{transform:translateY(2px);box-shadow:none;}
+  .from .base-ipa{
+    font-family:"Noto Sans","DejaVu Sans",sans-serif;font-size:19px;font-weight:700;color:var(--purple);
+  }
+  .from .mini{width:46px;height:46px;background:#FFEFC9;}
+
+  /* picture hint: hidden until the child asks for it */
+  .bottom{display:flex;align-items:center;gap:10px;margin-top:14px;}
+  .hint-toggle{
+    flex:1;height:58px;border:2px dashed #E4DAF0;border-radius:20px;background:#FBF8FE;
+    color:#7B6B8B;font:inherit;font-size:16px;font-weight:900;letter-spacing:-.1px;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .hint-toggle:active{transform:translateY(2px);}
+  .star{
+    flex:0 0 auto;width:58px;height:58px;border:0;border-radius:20px;
+    background:#FFF7EA;font-size:27px;line-height:1;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 0 #F1E4D1;
+  }
+  .star.on{background:#FFF1BD;box-shadow:0 3px 0 #EFD778;}
+  .star:active{transform:translateY(2px);box-shadow:none;}
+  .hint{margin-top:12px;animation:fade .18s ease-out;}
+  .hint-pic{
+    height:120px;border-radius:20px;display:grid;place-items:center;overflow:hidden;
+    background:linear-gradient(150deg,hsl(var(--h) 95% 96%),hsl(calc(var(--h) + 35) 90% 92%));
+  }
+  .hint-pic .big-emoji{font-size:64px;line-height:1;}
+
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .btn{
+    position:relative;height:72px;border:0;border-radius:24px;color:#fff;font:inherit;
+    font-size:21px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;
+    letter-spacing:-.2px;cursor:pointer;
+  }
+  .btn .ic{font-size:24px;line-height:1;}
+  .listen{background:linear-gradient(165deg,#FFA98C,#FF7161);box-shadow:0 6px 0 #E9594B;}
+  .slow{background:linear-gradient(165deg,#6ED9C3,#2FB79C);box-shadow:0 6px 0 #249A82;}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.16);}
+  .btn.playing{box-shadow:inset 0 0 0 5px rgba(255,255,255,.45), 0 4px 0 rgba(0,0,0,.12);}
+  .ex{
+    display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 12px 9px 9px;
+    background:#FBF7FF;border-radius:20px;
+  }
+  .ex p{margin:0;font-size:17px;font-weight:700;color:var(--ink-soft);line-height:1.35;}
+  .mini{
+    flex:0 0 auto;width:46px;height:46px;border:0;border-radius:50%;background:#EFE7FA;
+    font-size:20px;display:flex;align-items:center;justify-content:center;
+  }
+  .mini:active{transform:scale(.95);}
+  .tag{
+    margin:12px auto 0;width:max-content;padding:5px 12px;border-radius:999px;
+    background:#F1EEF6;color:#9C90A6;font-size:12px;font-weight:800;letter-spacing:.04em;
+  }
+  .sparkle{
+    position:absolute;left:50%;top:6px;font-size:20px;pointer-events:none;
+    animation:rise .7s ease-out forwards;
+  }
+
+  /* ---------- message card ---------- */
+  .msg{
+    background:var(--card);border-radius:34px;padding:32px 22px 28px;text-align:center;
+    box-shadow:0 12px 30px rgba(120,110,140,.1);animation:fade .2s ease-out;
+  }
+  .msg .face{font-size:74px;line-height:1;display:block;margin-bottom:12px;}
+  .msg b{display:block;font-size:24px;font-weight:900;letter-spacing:-.4px;}
+  .msg small{display:block;margin-top:8px;font-size:16px;font-weight:700;color:var(--muted);line-height:1.4;}
+  .msg .retry{
+    margin-top:18px;height:56px;padding:0 26px;border:0;border-radius:22px;
+    background:linear-gradient(165deg,#6ED9C3,#2FB79C);color:#fff;font:inherit;font-size:19px;font-weight:900;
+    box-shadow:0 5px 0 #249A82;
+  }
+  .msg .retry:active{transform:translateY(3px);box-shadow:0 2px 0 #249A82;}
+
+  /* ---------- shelves ---------- */
+  .shelf{margin-top:18px;}
+  .shelf-head{display:flex;align-items:center;justify-content:space-between;margin:0 6px 8px;}
+  .shelf-head h3{margin:0;font-size:14px;font-weight:900;color:#A092A9;letter-spacing:.02em;}
+  .shelf-head button{border:0;background:transparent;color:#BBAEC2;font:inherit;font-size:13px;font-weight:800;padding:4px 2px;}
+  .row{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none;}
+  .row::-webkit-scrollbar{display:none;}
+  .pill{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 15px;
+    border:2px solid #EEE8F4;border-radius:23px;background:#fff;font:inherit;
+    font-size:16px;font-weight:800;color:#5C4F64;cursor:pointer;
+  }
+  .pill .em{font-size:19px;line-height:1;}
+  .pill:active{transform:translateY(2px);}
+
+  /* ---------- star stamp & toast ---------- */
+  .stamp{
+    position:fixed;top:76px;left:50%;z-index:30;pointer-events:none;
+    transform:translate(-50%,-8px) scale(.92);opacity:0;
+    padding:10px 20px;border-radius:999px;background:#FFF4C9;color:#7C5B14;
+    font-size:17px;font-weight:900;box-shadow:0 10px 22px rgba(190,150,60,.22);
+    transition:opacity .18s ease,transform .18s ease;
+  }
+  .stamp.in{opacity:1;transform:translate(-50%,0) scale(1);}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,18px);
+    background:#3F3548;color:#fff;padding:11px 20px;border-radius:999px;
+    font-size:15px;font-weight:800;opacity:0;pointer-events:none;transition:.22s;z-index:20;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes rise{from{opacity:1;transform:translate(-50%,0) scale(.8);}to{opacity:0;transform:translate(-50%,-26px) scale(1.15);}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<svg class="scenery" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <g class="cloud" opacity="0.75">
+    <ellipse cx="66" cy="120" rx="46" ry="21"/>
+    <ellipse cx="98" cy="128" rx="32" ry="15"/>
+    <ellipse cx="36" cy="129" rx="26" ry="12"/>
+  </g>
+  <g class="cloud" opacity="0.55">
+    <ellipse cx="336" cy="252" rx="38" ry="17"/>
+    <ellipse cx="360" cy="259" rx="26" ry="12"/>
+  </g>
+  <g class="cloud" opacity="0.6">
+    <ellipse cx="120" cy="560" rx="52" ry="23"/>
+    <ellipse cx="158" cy="568" rx="34" ry="15"/>
+    <ellipse cx="86" cy="569" rx="30" ry="13"/>
+  </g>
+  <g class="cloud" opacity="0.5">
+    <ellipse cx="330" cy="700" rx="44" ry="20"/>
+    <ellipse cx="300" cy="707" rx="26" ry="12"/>
+  </g>
+  <g class="star" opacity="0.55">
+    <path d="M300 90 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/>
+    <path d="M110 230 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4z"/>
+    <path d="M232 400 l2 4.7 4.7 2 -4.7 2 -2 4.7 -2 -4.7 -4.7 -2 4.7 -2z"/>
+    <path d="M60 470 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4z"/>
+    <path d="M368 430 l2 4.7 4.7 2 -4.7 2 -2 4.7 -2 -4.7 -4.7 -2 4.7 -2z"/>
+    <path d="M200 640 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4z"/>
+    <path d="M330 330 l2 4.7 4.7 2 -4.7 2 -2 4.7 -2 -4.7 -4.7 -2 4.7 -2z"/>
+  </g>
+</svg>
+
+<div class="app">
+  <header>
+    <h1>Seoyeon's Word Book <span class="chick">🐣</span></h1>
+    <div class="stars" aria-label="Stars today">⭐ <span id="starN">0</span></div>
+  </header>
+
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <input id="q" type="text" name="q" placeholder="Type a word" inputmode="search"
+           enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false"
+           aria-label="Type a word">
+    <button class="clear" id="clearBtn" type="button" aria-label="Clear">✕</button>
+    <button class="go" type="submit" aria-label="Search">🔍</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <section class="shelf" id="shelfSaved" hidden>
+    <div class="shelf-head"><h3>⭐ My words</h3></div>
+    <div class="row" id="rowSaved"></div>
+  </section>
+
+  <section class="shelf" id="shelfRecent" hidden>
+    <div class="shelf-head"><h3>🕒 Recent</h3><button type="button" id="clearRecent">clear</button></div>
+    <div class="row" id="rowRecent"></div>
+  </section>
+</div>
+
+<div class="stamp" id="stamp" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   Seoyeon's Word Book — one file, no build, works in a phone browser.
+   Big picture + big word + US IPA + Listen / Slow.
+   No Korean meanings: the picture is the meaning.
+   Past / plural forms find their base word ("from 👉 go").
+   ===================================================================== */
+
+/* ---------- local picture dictionary ---------- */
+const LOCAL = [
+  /* animals */
+  {w:'dog',        ipa:'/dɑːɡ/',            e:'🐶', ex:'My dog is very cute.'},
+  {w:'cat',        ipa:'/kæt/',             e:'🐱', ex:'The cat is sleeping.'},
+  {w:'bird',       ipa:'/bɝːd/',            e:'🐦', ex:'A bird can fly.'},
+  {w:'fish',       ipa:'/fɪʃ/',             e:'🐟', ex:'Fish live in water.'},
+  {w:'rabbit',     ipa:'/ˈræb.ɪt/',         e:'🐰', ex:'The rabbit has long ears.'},
+  {w:'tiger',      ipa:'/ˈtaɪ.ɡɚ/',         e:'🐯', ex:'A tiger is big and strong.'},
+  {w:'lion',       ipa:'/ˈlaɪ.ən/',         e:'🦁', ex:'The lion is sleeping.'},
+  {w:'monkey',     ipa:'/ˈmʌŋ.ki/',         e:'🐵', ex:'Monkeys like bananas.'},
+  {w:'bear',       ipa:'/ber/',             e:'🐻', ex:'The bear is very big.'},
+  {w:'elephant',   ipa:'/ˈel.ə.fənt/',      e:'🐘', ex:'An elephant has a long nose.'},
+  {w:'horse',      ipa:'/hɔːrs/',           e:'🐴', ex:'I can ride a horse.'},
+  {w:'cow',        ipa:'/kaʊ/',             e:'🐮', ex:'The cow gives us milk.'},
+  {w:'pig',        ipa:'/pɪɡ/',             e:'🐷', ex:'The pig is in the mud.'},
+  {w:'duck',       ipa:'/dʌk/',             e:'🦆', ex:'The duck is swimming.'},
+  {w:'frog',       ipa:'/frɑːɡ/',           e:'🐸', ex:'The frog can jump high.'},
+  {w:'butterfly',  ipa:'/ˈbʌt̬.ɚ.flaɪ/',     e:'🦋', ex:'The butterfly is pretty.'},
+  {w:'bee',        ipa:'/biː/',             e:'🐝', ex:'Bees make honey.'},
+  {w:'turtle',     ipa:'/ˈtɝː.t̬əl/',        e:'🐢', ex:'The turtle is very slow.'},
+  {w:'penguin',    ipa:'/ˈpeŋ.ɡwɪn/',       e:'🐧', ex:'Penguins live in the cold.'},
+  {w:'giraffe',    ipa:'/dʒəˈræf/',         e:'🦒', ex:'A giraffe has a long neck.'},
+  {w:'zebra',      ipa:'/ˈziː.brə/',        e:'🦓', ex:'The zebra has stripes.'},
+  {w:'kangaroo',   ipa:'/ˌkæŋ.ɡəˈruː/',     e:'🦘', ex:'A kangaroo can jump.'},
+  {w:'mouse',      ipa:'/maʊs/',            e:'🐭', ex:'The mouse is very small.'},
+  {w:'goose',      ipa:'/ɡuːs/',            e:'🦢', ex:'The goose is white.'},
+  {w:'wolf',       ipa:'/wʊlf/',            e:'🐺', ex:'The wolf lives in the forest.'},
+
+  /* food & drink */
+  {w:'apple',      ipa:'/ˈæp.əl/',          e:'🍎', ex:'I eat an apple every day.'},
+  {w:'banana',     ipa:'/bəˈnæn.ə/',        e:'🍌', ex:'Monkeys love bananas.'},
+  {w:'strawberry', ipa:'/ˈstrɔː.ber.i/',    e:'🍓', ex:'The strawberry is sweet.'},
+  {w:'watermelon', ipa:'/ˈwɑː.t̬ɚˌmel.ən/',  e:'🍉', ex:'Watermelon is juicy.'},
+  {w:'orange',     ipa:'/ˈɔːr.ɪndʒ/',       e:'🍊', ex:'I like orange juice.'},
+  {w:'grape',      ipa:'/ɡreɪp/',           e:'🍇', ex:'Grapes are small and sweet.'},
+  {w:'milk',       ipa:'/mɪlk/',            e:'🥛', ex:'I drink milk every morning.'},
+  {w:'bread',      ipa:'/bred/',            e:'🍞', ex:'I eat bread for breakfast.'},
+  {w:'cookie',     ipa:'/ˈkʊk.i/',          e:'🍪', ex:'This cookie is so yummy.'},
+  {w:'pizza',      ipa:'/ˈpiːt.sə/',        e:'🍕', ex:'We eat pizza on Friday.'},
+  {w:'ice cream',  ipa:'/ˈaɪs ˌkriːm/',     e:'🍦', ex:'I want ice cream!'},
+  {w:'egg',        ipa:'/eɡ/',              e:'🥚', ex:'I have an egg for breakfast.'},
+  {w:'carrot',     ipa:'/ˈker.ət/',         e:'🥕', ex:'Rabbits eat carrots.'},
+  {w:'cake',       ipa:'/keɪk/',            e:'🍰', ex:'Let us eat birthday cake.'},
+  {w:'candy',      ipa:'/ˈkæn.di/',         e:'🍬', ex:'Do not eat too much candy.'},
+  {w:'water',      ipa:'/ˈwɑː.t̬ɚ/',         e:'💧', ex:'Drink water every day.'},
+  {w:'rice',       ipa:'/raɪs/',            e:'🍚', ex:'We eat rice with soup.'},
+
+  /* nature */
+  {w:'sun',        ipa:'/sʌn/',             e:'☀️', ex:'The sun is bright.'},
+  {w:'moon',       ipa:'/muːn/',            e:'🌙', ex:'The moon is in the sky.'},
+  {w:'star',       ipa:'/stɑːr/',           e:'⭐', ex:'Stars shine at night.'},
+  {w:'rainbow',    ipa:'/ˈreɪn.boʊ/',       e:'🌈', ex:'I see a rainbow after the rain.'},
+  {w:'cloud',      ipa:'/klaʊd/',           e:'☁️', ex:'The cloud looks like a sheep.'},
+  {w:'rain',       ipa:'/reɪn/',            e:'🌧️', ex:'I like the rain.'},
+  {w:'snow',       ipa:'/snoʊ/',            e:'❄️', ex:'Snow is white and cold.'},
+  {w:'tree',       ipa:'/triː/',            e:'🌳', ex:'The tree is very tall.'},
+  {w:'leaf',       ipa:'/liːf/',            e:'🍃', ex:'A green leaf is falling.'},
+  {w:'flower',     ipa:'/ˈflaʊ.ɚ/',         e:'🌸', ex:'The flower smells good.'},
+  {w:'sea',        ipa:'/siː/',             e:'🌊', ex:'I swim in the sea.'},
+  {w:'mountain',   ipa:'/ˈmaʊn.tən/',       e:'⛰️', ex:'The mountain is very high.'},
+  {w:'fire',       ipa:'/ˈfaɪ.ɚ/',          e:'🔥', ex:'Fire is hot.'},
+
+  /* school */
+  {w:'school',     ipa:'/skuːl/',           e:'🏫', ex:'I go to school every morning.'},
+  {w:'book',       ipa:'/bʊk/',             e:'📚', ex:'This book is fun.'},
+  {w:'pencil',     ipa:'/ˈpen.səl/',        e:'✏️', ex:'I write with a pencil.'},
+  {w:'teacher',    ipa:'/ˈtiː.tʃɚ/',        e:'👩‍🏫', ex:'My teacher is kind.'},
+  {w:'friend',     ipa:'/frend/',           e:'👫', ex:'My friend is funny.'},
+  {w:'backpack',   ipa:'/ˈbæk.pæk/',        e:'🎒', ex:'My backpack is heavy.'},
+  {w:'crayon',     ipa:'/ˈkreɪ.ɑːn/',       e:'🖍️', ex:'I draw with crayons.'},
+  {w:'scissors',   ipa:'/ˈsɪz.ɚz/',         e:'✂️', ex:'Be careful with scissors.'},
+  {w:'clock',      ipa:'/klɑːk/',           e:'⏰', ex:'The clock says it is nine.'},
+  {w:'ruler',      ipa:'/ˈruː.lɚ/',         e:'📏', ex:'I need a ruler.'},
+  {w:'shelf',      ipa:'/ʃelf/',            e:'🗄️', ex:'The book is on the shelf.'},
+
+  /* family & people */
+  {w:'family',     ipa:'/ˈfæm.əl.i/',       e:'👨‍👩‍👧‍👦', ex:'My family is happy.'},
+  {w:'mother',     ipa:'/ˈmʌð.ɚ/',          e:'👩', ex:'My mother is kind.'},
+  {w:'father',     ipa:'/ˈfɑː.ðɚ/',         e:'👨', ex:'My father is tall.'},
+  {w:'sister',     ipa:'/ˈsɪs.tɚ/',         e:'👧', ex:'My sister is funny.'},
+  {w:'brother',    ipa:'/ˈbrʌð.ɚ/',         e:'👦', ex:'My brother is older than me.'},
+  {w:'baby',       ipa:'/ˈbeɪ.bi/',         e:'👶', ex:'The baby is sleeping.'},
+  {w:'child',      ipa:'/tʃaɪld/',          e:'🧒', ex:'The child is smiling.'},
+  {w:'person',     ipa:'/ˈpɝː.sən/',        e:'🧑', ex:'She is a kind person.'},
+  {w:'man',        ipa:'/mæn/',             e:'👨', ex:'The man is running.'},
+  {w:'woman',      ipa:'/ˈwʊm.ən/',         e:'👩', ex:'The woman is a doctor.'},
+  {w:'grandmother',ipa:'/ˈɡræn.mʌð.ɚ/',     e:'👵', ex:'My grandmother tells stories.'},
+  {w:'grandfather',ipa:'/ˈɡræn.fɑː.ðɚ/',    e:'👴', ex:'My grandfather likes tea.'},
+
+  /* feelings */
+  {w:'happy',      ipa:'/ˈhæp.i/',          e:'😊', ex:'I am happy today.'},
+  {w:'sad',        ipa:'/sæd/',             e:'😢', ex:'Do not be sad.'},
+  {w:'angry',      ipa:'/ˈæŋ.ɡri/',         e:'😠', ex:'The cat looks angry.'},
+  {w:'sleepy',     ipa:'/ˈsliː.pi/',        e:'😴', ex:'I am sleepy at night.'},
+  {w:'scared',     ipa:'/skerd/',           e:'😨', ex:'I am scared of bugs.'},
+  {w:'excited',    ipa:'/ɪkˈsaɪ.t̬ɪd/',      e:'🤩', ex:'I am excited about my birthday.'},
+  {w:'love',       ipa:'/lʌv/',             e:'💕', ex:'I love my family.'},
+  {w:'good',       ipa:'/ɡʊd/',             e:'👍', ex:'This apple is good.'},
+  {w:'bad',        ipa:'/bæd/',             e:'👎', ex:'Do not eat bad food.'},
+
+  /* vehicles */
+  {w:'car',        ipa:'/kɑːr/',            e:'🚗', ex:'My dad drives a car.'},
+  {w:'bus',        ipa:'/bʌs/',             e:'🚌', ex:'I take the bus to school.'},
+  {w:'train',      ipa:'/treɪn/',           e:'🚆', ex:'The train is very fast.'},
+  {w:'airplane',   ipa:'/ˈer.pleɪn/',       e:'✈️', ex:'The airplane flies high.'},
+  {w:'bicycle',    ipa:'/ˈbaɪ.sə.kəl/',     e:'🚲', ex:'I ride my bicycle.'},
+  {w:'boat',       ipa:'/boʊt/',            e:'⛵', ex:'The boat is on the water.'},
+  {w:'rocket',     ipa:'/ˈrɑː.kɪt/',        e:'🚀', ex:'The rocket goes to space.'},
+  {w:'ambulance',  ipa:'/ˈæm.bjə.ləns/',    e:'🚑', ex:'The ambulance is very fast.'},
+
+  /* body */
+  {w:'hand',       ipa:'/hænd/',            e:'✋', ex:'Wash your hands.'},
+  {w:'eye',        ipa:'/aɪ/',              e:'👁️', ex:'My eyes are brown.'},
+  {w:'nose',       ipa:'/noʊz/',            e:'👃', ex:'The dog has a good nose.'},
+  {w:'mouth',      ipa:'/maʊθ/',            e:'👄', ex:'Open your mouth.'},
+  {w:'ear',        ipa:'/ɪr/',              e:'👂', ex:'I hear with my ears.'},
+  {w:'tooth',      ipa:'/tuːθ/',            e:'🦷', ex:'Brush your teeth.'},
+  {w:'heart',      ipa:'/hɑːrt/',           e:'❤️', ex:'My heart is beating.'},
+
+  /* jobs & places */
+  {w:'doctor',     ipa:'/ˈdɑːk.tɚ/',        e:'🩺', ex:'The doctor helps sick people.'},
+  {w:'nurse',      ipa:'/nɝːs/',            e:'👩‍⚕️', ex:'The nurse is very kind.'},
+  {w:'vet',        ipa:'/vet/',             e:'🐾', ex:'The vet helps animals.'},
+  {w:'hospital',   ipa:'/ˈhɑː.spɪ.t̬əl/',    e:'🏥', ex:'My mom works at a hospital.'},
+  {w:'park',       ipa:'/pɑːrk/',           e:'🏞️', ex:'We play at the park.'},
+  {w:'house',      ipa:'/haʊs/',            e:'🏠', ex:'My house is warm.'},
+
+  /* action words (also the base of many -ed / -ing forms) */
+  {w:'go',         ipa:'/ɡoʊ/',             e:'🚶', ex:'Let us go to the park.'},
+  {w:'come',       ipa:'/kʌm/',             e:'🙋', ex:'Come here, please.'},
+  {w:'see',        ipa:'/siː/',             e:'👀', ex:'I can see a bird.'},
+  {w:'make',       ipa:'/meɪk/',            e:'🛠️', ex:'Let us make a cake.'},
+  {w:'take',       ipa:'/teɪk/',            e:'🤲', ex:'Take one cookie.'},
+  {w:'give',       ipa:'/ɡɪv/',             e:'🎁', ex:'Give me a hug.'},
+  {w:'say',        ipa:'/seɪ/',             e:'💬', ex:'Say hello to your teacher.'},
+  {w:'find',       ipa:'/faɪnd/',           e:'🔍', ex:'Can you find my cat?'},
+  {w:'think',      ipa:'/θɪŋk/',            e:'🤔', ex:'I think it is fun.'},
+  {w:'buy',        ipa:'/baɪ/',             e:'🛒', ex:'I want to buy a toy.'},
+  {w:'catch',      ipa:'/kætʃ/',            e:'🧤', ex:'Catch the ball!'},
+  {w:'feel',       ipa:'/fiːl/',            e:'💛', ex:'I feel happy today.'},
+  {w:'wake',       ipa:'/weɪk/',            e:'⏰', ex:'I wake up at seven.'},
+  {w:'drink',      ipa:'/drɪŋk/',           e:'🥤', ex:'I drink water.'},
+  {w:'fly',        ipa:'/flaɪ/',            e:'🕊️', ex:'Birds can fly.'},
+  {w:'grow',       ipa:'/ɡroʊ/',            e:'🌱', ex:'Plants grow in spring.'},
+  {w:'know',       ipa:'/noʊ/',             e:'💡', ex:'I know the answer.'},
+  {w:'draw',       ipa:'/drɔː/',            e:'🖌️', ex:'I draw a cat.'},
+  {w:'break',      ipa:'/breɪk/',           e:'💔', ex:'Do not break the cup.'},
+  {w:'speak',      ipa:'/spiːk/',           e:'🗣️', ex:'I speak English.'},
+  {w:'stand',      ipa:'/stænd/',           e:'🧍', ex:'Stand up, please.'},
+  {w:'sit',        ipa:'/sɪt/',             e:'🪑', ex:'Sit down, please.'},
+  {w:'get',        ipa:'/ɡet/',             e:'🎈', ex:'I get a gift.'},
+  {w:'have',       ipa:'/hæv/',             e:'🙌', ex:'I have a dog.'},
+  {w:'do',         ipa:'/duː/',             e:'✅', ex:'I do my homework.'},
+  {w:'be',         ipa:'/biː/',             e:'🙂', ex:'I want to be a vet.'},
+  {w:'ride',       ipa:'/raɪd/',            e:'🏇', ex:'I ride a bike.'},
+  {w:'drive',      ipa:'/draɪv/',           e:'🚙', ex:'My dad drives a car.'},
+  {w:'fall',       ipa:'/fɔːl/',            e:'🍂', ex:'Leaves fall in autumn.'},
+  {w:'hold',       ipa:'/hoʊld/',           e:'🤗', ex:'Hold my hand.'},
+  {w:'hear',       ipa:'/hɪr/',             e:'👂', ex:'I can hear a bird.'},
+  {w:'keep',       ipa:'/kiːp/',            e:'📦', ex:'Keep your toys here.'},
+  {w:'leave',      ipa:'/liːv/',            e:'🚪', ex:'Do not leave your bag.'},
+  {w:'lose',       ipa:'/luːz/',            e:'🧩', ex:'Do not lose your book.'},
+  {w:'meet',       ipa:'/miːt/',            e:'🤝', ex:'Nice to meet you.'},
+  {w:'pay',        ipa:'/peɪ/',             e:'💳', ex:'I pay with coins.'},
+  {w:'put',        ipa:'/pʊt/',             e:'📥', ex:'Put the book here.'},
+  {w:'sell',       ipa:'/sel/',             e:'🏷️', ex:'They sell ice cream.'},
+  {w:'send',       ipa:'/send/',            e:'✉️', ex:'Send a letter to Grandma.'},
+  {w:'spend',      ipa:'/spend/',           e:'💰', ex:'I spend my pocket money.'},
+  {w:'teach',      ipa:'/tiːtʃ/',           e:'👩‍🏫', ex:'I teach my sister.'},
+  {w:'tell',       ipa:'/tel/',             e:'🗨️', ex:'Tell me a story.'},
+  {w:'wear',       ipa:'/wer/',             e:'👕', ex:'I wear a coat.'},
+  {w:'win',        ipa:'/wɪn/',             e:'🏆', ex:'We can win the game.'},
+  {w:'begin',      ipa:'/bɪˈɡɪn/',          e:'🎬', ex:'Let us begin!'},
+  {w:'bring',      ipa:'/brɪŋ/',            e:'🎒', ex:'Bring your book.'},
+  {w:'build',      ipa:'/bɪld/',            e:'🧱', ex:'We build a sand castle.'},
+  {w:'choose',     ipa:'/tʃuːz/',           e:'🎯', ex:'Choose one, please.'},
+  {w:'cut',        ipa:'/kʌt/',             e:'✂️', ex:'Cut the paper.'},
+  {w:'fight',      ipa:'/faɪt/',            e:'🥊', ex:'Do not fight.'},
+  {w:'forget',     ipa:'/fɚˈɡet/',          e:'🤷', ex:'Do not forget your bag.'},
+  {w:'hit',        ipa:'/hɪt/',             e:'🥎', ex:'Hit the ball.'},
+  {w:'hurt',       ipa:'/hɝːt/',            e:'🤕', ex:'My knee hurts.'},
+  {w:'let',        ipa:'/let/',             e:'🔓', ex:'Let me help you.'},
+  {w:'mean',       ipa:'/miːn/',            e:'💭', ex:'What does this mean?'},
+  {w:'shake',      ipa:'/ʃeɪk/',            e:'🫨', ex:'Shake the bottle.'},
+  {w:'shut',       ipa:'/ʃʌt/',             e:'🚪', ex:'Shut the door.'},
+  {w:'steal',      ipa:'/stiːl/',           e:'🚫', ex:'Do not steal.'},
+  {w:'throw',      ipa:'/θroʊ/',            e:'🏀', ex:'Throw the ball.'},
+  {w:'understand', ipa:'/ˌʌn.dɚˈstænd/',    e:'🧠', ex:'I understand.'},
+  {w:'dig',        ipa:'/dɪɡ/',             e:'🕳️', ex:'Dig a hole.'},
+  {w:'feed',       ipa:'/fiːd/',            e:'🥣', ex:'Feed the dog.'},
+  {w:'hang',       ipa:'/hæŋ/',             e:'🧥', ex:'Hang your coat.'},
+  {w:'hide',       ipa:'/haɪd/',            e:'🙈', ex:'Let us hide!'},
+  {w:'lend',       ipa:'/lend/',            e:'🤲', ex:'Can you lend me a pencil?'},
+  {w:'ring',       ipa:'/rɪŋ/',             e:'🔔', ex:'The bell rings.'},
+  {w:'sweep',      ipa:'/swiːp/',           e:'🧹', ex:'Sweep the floor.'},
+  {w:'walk',       ipa:'/wɔːk/',            e:'🚶', ex:'I walk to school.'},
+  {w:'work',       ipa:'/wɝːk/',            e:'🛠️', ex:'My mom works at a hospital.'},
+  {w:'learn',      ipa:'/lɝːn/',            e:'📖', ex:'I learn English every day.'},
+  {w:'help',       ipa:'/help/',            e:'🤝', ex:'Can you help me?'},
+  {w:'look',       ipa:'/lʊk/',             e:'👀', ex:'Look at the sky.'},
+  {w:'watch',      ipa:'/wɑːtʃ/',           e:'📺', ex:'We watch a movie.'},
+  {w:'wash',       ipa:'/wɑːʃ/',            e:'🧼', ex:'Wash your hands.'},
+  {w:'open',       ipa:'/ˈoʊ.pən/',         e:'📂', ex:'Open the window.'},
+  {w:'close',      ipa:'/kloʊz/',           e:'🚪', ex:'Close the door.'},
+  {w:'clean',      ipa:'/kliːn/',           e:'🧽', ex:'Clean your room.'},
+  {w:'study',      ipa:'/ˈstʌd.i/',         e:'📚', ex:'I study English.'},
+  {w:'cook',       ipa:'/kʊk/',             e:'🍳', ex:'My dad can cook.'},
+  {w:'talk',       ipa:'/tɔːk/',            e:'🗣️', ex:'Let us talk.'},
+  {w:'listen',     ipa:'/ˈlɪs.ən/',         e:'🎧', ex:'Listen to the teacher.'},
+  {w:'smile',      ipa:'/smaɪl/',           e:'😄', ex:'Smile for the camera!'},
+  {w:'cry',        ipa:'/kraɪ/',            e:'😭', ex:'The baby is crying.'},
+  {w:'want',       ipa:'/wɑːnt/',           e:'🙏', ex:'I want a cookie.'},
+  {w:'need',       ipa:'/niːd/',            e:'🧃', ex:'I need some water.'},
+  {w:'like',       ipa:'/laɪk/',            e:'💖', ex:'I like apples.'},
+  {w:'live',       ipa:'/lɪv/',             e:'🏡', ex:'I live in Seoul.'},
+  {w:'start',      ipa:'/stɑːrt/',          e:'🚦', ex:'Let us start now.'},
+  {w:'stop',       ipa:'/stɑːp/',           e:'🛑', ex:'Stop, please!'},
+  {w:'finish',     ipa:'/ˈfɪn.ɪʃ/',         e:'🏁', ex:'I finish my homework.'},
+  {w:'wait',       ipa:'/weɪt/',            e:'⏳', ex:'Wait for me!'},
+  {w:'show',       ipa:'/ʃoʊ/',             e:'🖼️', ex:'Show me your picture.'},
+  {w:'move',       ipa:'/muːv/',            e:'🚚', ex:'Move the box.'},
+  {w:'turn',       ipa:'/tɝːn/',            e:'🔄', ex:'Turn the page.'},
+  {w:'count',      ipa:'/kaʊnt/',           e:'🔢', ex:'Count to ten.'},
+  {w:'carry',      ipa:'/ˈkær.i/',          e:'🎒', ex:'I carry my bag.'},
+  {w:'try',        ipa:'/traɪ/',            e:'💪', ex:'Try again!'},
+  {w:'stay',       ipa:'/steɪ/',            e:'🛋️', ex:'Stay at home.'},
+  {w:'visit',      ipa:'/ˈvɪz.ɪt/',         e:'🏡', ex:'We visit Grandma.'},
+  {w:'brush',      ipa:'/brʌʃ/',            e:'🪥', ex:'Brush your teeth.'},
+  {w:'climb',      ipa:'/klaɪm/',           e:'🧗', ex:'We climb the hill.'},
+  {w:'kick',       ipa:'/kɪk/',             e:'⚽', ex:'Kick the ball.'},
+  {w:'push',       ipa:'/pʊʃ/',             e:'👉', ex:'Push the door.'},
+  {w:'pull',       ipa:'/pʊl/',             e:'👈', ex:'Pull the rope.'},
+  {w:'pick',       ipa:'/pɪk/',             e:'🌼', ex:'Pick a flower.'},
+  {w:'share',      ipa:'/ʃer/',             e:'🤝', ex:'Share your toys.'},
+  {w:'hug',        ipa:'/hʌɡ/',             e:'🤗', ex:'Give me a hug.'},
+
+  /* everyday words */
+  {w:'hello',      ipa:'/həˈloʊ/',          e:'👋', ex:'Hello! How are you?'},
+  {w:'thank you',  ipa:'/ˈθæŋk.juː/',       e:'🙏', ex:'Thank you, Mom!'},
+  {w:'yes',        ipa:'/jes/',             e:'👍', ex:'Yes, I can!'},
+  {w:'no',         ipa:'/noʊ/',             e:'🙅', ex:'No, thank you.'},
+  {w:'run',        ipa:'/rʌn/',             e:'🏃', ex:'I run in the park.'},
+  {w:'jump',       ipa:'/dʒʌmp/',           e:'🤸', ex:'I can jump high.'},
+  {w:'swim',       ipa:'/swɪm/',            e:'🏊', ex:'I swim in the pool.'},
+  {w:'dance',      ipa:'/dæns/',            e:'💃', ex:'Let us dance together.'},
+  {w:'sing',       ipa:'/sɪŋ/',             e:'🎤', ex:'I sing a song.'},
+  {w:'read',       ipa:'/riːd/',            e:'📖', ex:'I read a book before bed.'},
+  {w:'write',      ipa:'/raɪt/',            e:'✍️', ex:'I write my name.'},
+  {w:'sleep',      ipa:'/sliːp/',           e:'🛌', ex:'I sleep at nine.'},
+  {w:'eat',        ipa:'/iːt/',             e:'🍽️', ex:'I eat breakfast at eight.'},
+  {w:'play',       ipa:'/pleɪ/',            e:'⚽', ex:'Let us play outside.'},
+  {w:'color',      ipa:'/ˈkʌl.ɚ/',          e:'🎨', ex:'I like the color pink.'},
+  {w:'number',     ipa:'/ˈnʌm.bɚ/',         e:'🔢', ex:'Ten is my favorite number.'},
+  {w:'birthday',   ipa:'/ˈbɝːθ.deɪ/',       e:'🎂', ex:'My birthday is in May.'}
+];
+const LOCAL_MAP = new Map(LOCAL.map(x => [x.w, x]));
+
+/* ---------- irregular past / plural -> base word ---------- */
+const IRREGULAR = {
+  /* past tense & past participle */
+  went:'go', gone:'go',
+  ate:'eat', eaten:'eat',
+  saw:'see', seen:'see',
+  ran:'run',
+  took:'take', taken:'take',
+  gave:'give', given:'give',
+  made:'make',
+  came:'come',
+  said:'say',
+  found:'find',
+  thought:'think',
+  bought:'buy',
+  caught:'catch',
+  felt:'feel',
+  slept:'sleep',
+  woke:'wake', woken:'wake',
+  wrote:'write', written:'write',
+  drank:'drink', drunk:'drink',
+  sang:'sing', sung:'sing',
+  swam:'swim', swum:'swim',
+  flew:'fly', flown:'fly',
+  grew:'grow', grown:'grow',
+  knew:'know', known:'know',
+  drew:'draw', drawn:'draw',
+  broke:'break', broken:'break',
+  spoke:'speak', spoken:'speak',
+  stood:'stand',
+  sat:'sit',
+  got:'get', gotten:'get',
+  had:'have',
+  did:'do', done:'do',
+  was:'be', were:'be', been:'be', is:'be', are:'be', am:'be',
+  rode:'ride', ridden:'ride',
+  drove:'drive', driven:'drive',
+  fell:'fall', fallen:'fall',
+  held:'hold',
+  heard:'hear',
+  kept:'keep',
+  left:'leave',
+  lost:'lose',
+  met:'meet',
+  paid:'pay',
+  sold:'sell',
+  sent:'send',
+  spent:'spend',
+  taught:'teach',
+  told:'tell',
+  wore:'wear', worn:'wear',
+  won:'win',
+  began:'begin', begun:'begin',
+  brought:'bring',
+  built:'build',
+  chose:'choose', chosen:'choose',
+  fought:'fight',
+  forgot:'forget', forgotten:'forget',
+  meant:'mean',
+  shook:'shake', shaken:'shake',
+  stole:'steal', stolen:'steal',
+  threw:'throw', thrown:'throw',
+  understood:'understand',
+  dug:'dig',
+  fed:'feed',
+  hung:'hang',
+  hid:'hide', hidden:'hide',
+  lent:'lend',
+  rang:'ring', rung:'ring',
+  rose:'rise', risen:'rise',
+  sought:'seek',
+  stuck:'stick',
+  swept:'sweep',
+  swung:'swing',
+  burnt:'burn',
+  learnt:'learn',
+  /* plural nouns */
+  children:'child', mice:'mouse', feet:'foot', teeth:'tooth',
+  men:'man', women:'woman', geese:'goose', leaves:'leaf',
+  people:'person', wolves:'wolf', shelves:'shelf', knives:'knife',
+  wives:'wife', lives:'life', halves:'half', scarves:'scarf', loaves:'loaf',
+  /* comparisons */
+  better:'good', best:'good', worse:'bad', worst:'bad'
+};
+
+/* words that only look like a suffix form */
+const NOT_A_FORM = new Set(['news','his','its','yes','this','morning','evening','thing',
+  'king','spring','string','wing','building','wedding','glass','class','grass','dress',
+  'bed','red','kind','old','cold','world','friend','hand','sound','round','ground','word',
+  'bird','card','hard','garden','bus','gas','always','plus','famous','serious','delicious',
+  'spider','water','flower','tower','paper','letter','number','sister','brother','mother',
+  'father','teacher','winter','summer','weather','tiger','river','over','under','never',
+  'color','colour','finger','shoulder','picture','dinner','supper','wonder','monster',
+  'enter','center','after','other','another','together','there','where','here','sure',
+  'little','middle','bottle','purple','simple','uncle','candle','needle','puzzle','apple',
+  'table','circle','whistle','example','airplane','cake','bike','lake','make','take','wake',
+  'bake','shake','name','game','time','home','some','come','same','more','store','door',
+  'floor','computer','banana','panda','zebra','koala','llama','animal','hospital','school']);
+
+/* ---------- tiny helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.,!?;:"“”]+$/g, '');
+const hue = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+
+const store = (() => {
+  try { localStorage.setItem('__ok', '1'); localStorage.removeItem('__ok'); return localStorage; }
+  catch (e) { const m = {}; return {getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; }}; }
+})();
+const readJSON = (k, d) => { try { const v = JSON.parse(store.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+const writeJSON = (k, v) => { try { store.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+let saved  = readJSON('sw.saved.v1', []);      // [{w,ipa,e,ex,audio}]
+let recent = readJSON('sw.recent.v1', []);     // [word]
+let cache  = readJSON('sw.cache.v1', {});      // {word:{w,ipa,audio,e}}
+
+/* ---------- today's stars ---------- */
+const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+let stars = readJSON('sw.stars.v1', {d: '', n: 0, words: []});
+if (!stars || stars.d !== todayKey()) stars = {d: todayKey(), n: 0, words: []};
+function renderStars(){ $('#starN').textContent = stars.n; }
+function addStar(w){
+  if (stars.words.indexOf(w) > -1) return false;
+  stars.words.push(w); stars.n += 1;
+  if (stars.words.length > 300) stars.words = stars.words.slice(-300);
+  writeJSON('sw.stars.v1', stars);
+  renderStars();
+  return true;
+}
+
+/* ---------- voices & sound ---------- */
+const synth = window.speechSynthesis || null;
+let voices = [];
+function refreshVoices(){ try { voices = synth ? (synth.getVoices() || []) : []; } catch (e) { voices = []; } }
+if (synth) {
+  refreshVoices();
+  if (synth.addEventListener) synth.addEventListener('voiceschanged', refreshVoices);
+  else synth.onvoiceschanged = refreshVoices;
+}
+function pickVoice(){
+  const en = voices.filter(v => /^en([-_]|$)/i.test(v.lang || ''));
+  return en.find(v => /en[-_]US/i.test(v.lang) && /google|samantha|aria|jenny|natural|female/i.test(v.name))
+      || en.find(v => /en[-_]US/i.test(v.lang))
+      || en.find(v => /en[-_]GB/i.test(v.lang))
+      || en[0] || null;
+}
+const audioEls = new Map();
+function playAudio(url, rate){
+  return new Promise((resolve, reject) => {
+    let a = audioEls.get(url);
+    if (!a) { a = new Audio(); a.preload = 'auto'; a.src = url; audioEls.set(url, a); }
+    try { a.pause(); a.currentTime = 0; } catch (e) {}
+    a.preservesPitch = true; a.mozPreservesPitch = true; a.webkitPreservesPitch = true;
+    a.playbackRate = rate;
+    let done = false;
+    const finish = ok => { if (done) return; done = true; a.onended = null; a.onerror = null; clearTimeout(timer); ok ? resolve() : reject(new Error('audio-failed')); };
+    const timer = setTimeout(() => finish(a.currentTime > 0 && !a.paused), 4500);
+    a.onended = () => finish(true);
+    a.onerror = () => finish(false);
+    const p = a.play();
+    if (p && p.then) p.catch(() => finish(false));
+  });
+}
+function tts(text, rate){
+  if (!synth || !window.SpeechSynthesisUtterance) return false;
+  try { synth.cancel(); } catch (e) {}
+  const u = new SpeechSynthesisUtterance(String(text));
+  u.lang = 'en-US'; u.rate = rate; u.pitch = 1.04; u.volume = 1;
+  const v = pickVoice();
+  if (v) { try { u.voice = v; } catch (e) {} }
+  try { synth.speak(u); } catch (e) { return false; }
+  return true;
+}
+function stopSound(){
+  if (synth) { try { synth.cancel(); } catch (e) {} }
+  audioEls.forEach(a => { try { a.pause(); } catch (e) {} });
+}
+let playToken = 0;
+async function say(text, slow, opts = {}){
+  if (!text) return;
+  const token = ++playToken;
+  stopSound();
+  const url = opts.audio || (current && current.audio);
+  if (url && !opts.ttsOnly) {
+    try { await playAudio(url, slow ? 0.62 : 1); return; }
+    catch (e) { /* no mp3 or blocked: use the voice */ }
+    if (token !== playToken) return;
+  }
+  if (!tts(text, slow ? 0.6 : 0.92)) toast('No sound 😢');
+}
+
+/* ---------- picture guesser for words outside the book ---------- */
+const ICON_WORDS = [
+  [['insect','butterfly','bee','ant','bug','moth','spider','caterpillar','ladybug'], '🦋'],
+  [['animal','mammal','bird','fish','reptile','amphibian','dog','puppy','cat','kitten','horse','cattle','cow','pig','sheep','goat','monkey','ape','bear','lion','tiger','rabbit','mouse','rat','frog','duck','chicken','pet','creature','dinosaur','whale','shark','elephant','zebra','giraffe','panda'], '🐾'],
+  [['food','fruit','vegetable','eat','edible','meal','cook','dish','bread','meat','soup','sweet','dessert','snack','flavor','taste','cake','candy','cookie','pizza','rice'], '🍽️'],
+  [['drink','beverage','liquid','water','thirst','juice','milk'], '💧'],
+  [['plant','tree','flower','leaf','garden','grass','seed','forest','rose','bush'], '🌿'],
+  [['school','teach','student','learn','class','lesson','study','pupil','homework'], '🏫'],
+  [['book','read','page','story','write','text','letter','word','sentence','paper','dictionary'], '📖'],
+  [['music','song','sing','sound','instrument','melody','tune','rhythm','piano','guitar','drum'], '🎵'],
+  [['colour','color','paint','draw','art','picture','design','sketch','crayon'], '🎨'],
+  [['body','hand','head','eye','face','finger','arm','leg','hair','skin','mouth','nose','ear','bone','blood','foot','knee','tooth','heart'], '🖐️'],
+  [['family','mother','father','parent','child','baby','person','people','friend','woman','man','girl','boy','human','husband','wife','brother','sister','grandmother','grandfather'], '👨‍👩‍👧‍👦'],
+  [['car','vehicle','road','drive','bus','truck','train','plane','aircraft','ship','boat','travel','wheel','engine','traffic','bicycle','bike','rocket'], '🚗'],
+  [['machine','tool','build','building','repair','device','metal','iron','hammer'], '🔧'],
+  [['castle','tower','palace','fort','museum'], '🏰'],
+  [['money','buy','shop','store','price','pay','market','sell','coin','bank'], '🛒'],
+  [['time','day','night','year','hour','minute','clock','morning','evening','week','month','season','today','tomorrow'], '⏰'],
+  [['happy','sad','feel','emotion','angry','love','afraid','fear','joy','smile','cry','surprise','hope','tired','excited'], '😊'],
+  [['home','house','room','door','window','kitchen','wall','floor','bed','chair','table'], '🏠'],
+  [['clothes','clothing','wear','shirt','shoe','hat','dress','coat','pants','sock'], '👕'],
+  [['weather','rain','snow','cloud','wind','storm','sun','sky','thunder','fog','ice'], '🌤️'],
+  [['number','count','math','digit','amount','measure','size'], '🔢'],
+  [['run','jump','swim','dance','move','play','sport','game','race','throw','catch','climb','walk'], '🏃'],
+  [['doctor','hospital','health','medicine','nurse','sick','ill','disease','pain','cure'], '🩺'],
+  [['phone','telephone','mobile','cellphone'], '📞'],
+  [['computer','internet','screen','data','software','digital','online','app','keyboard','laptop'], '💻'],
+  [['fire','light','burn','hot','flame','bright'], '🔥'],
+  [['star','space','planet','moon','galaxy','universe'], '🌟']
+];
+const ICON_RULES = ICON_WORDS.map(([words, icon]) =>
+  [new RegExp('\\b(' + words.join('|') + ')(s|es|ing|ed)?\\b', 'i'), icon]);
+
+function guessIcon(text, extra){
+  const word = String(extra || '').toLowerCase();
+  for (const [re, icon] of ICON_RULES) if (word && re.test(word)) return icon;
+  const blob = String(text || '').toLowerCase();
+  for (const [re, icon] of ICON_RULES) if (re.test(blob)) return icon;
+  return '✨';
+}
+
+/* ---------- dictionary API ---------- */
+function tidyIpa(s){
+  if (!s) return '';
+  let t = String(s).trim();
+  if (/^\[.*\]$/.test(t)) t = '/' + t.slice(1, -1) + '/';
+  /* dictionary transcriptions carry tiny diacritics a child cannot read */
+  t = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
+  t = t.replace(/ʷ/g, '');
+  t = t.replace(/əɹ/g, 'ɚ').replace(/ɜːɹ/g, 'ɝː').replace(/ɜɹ/g, 'ɝ');
+  t = t.replace(/\s+/g, '');
+  return t;
+}
+function parseApi(data, word){
+  if (!Array.isArray(data) || !data.length) return null;
+  const ipas = [], audios = [], defs = [];
+  data.forEach(entry => {
+    (entry.phonetics || []).forEach(p => {
+      const a = (p.audio || '').trim();
+      if (a) audios.push(a);
+      if (p.text) ipas.push({text: p.text, audio: a});
+    });
+    if (entry.phonetic) ipas.push({text: entry.phonetic, audio: ''});
+    (entry.meanings || []).forEach(m => {
+      (m.definitions || []).forEach(d => {
+        if (d.definition) defs.push(d.definition);
+        if (d.example) defs.push(d.example);
+      });
+    });
+  });
+  const usAudio = audios.find(a => /-us\.mp3/i.test(a)) || audios.find(a => /en[-_]us/i.test(a)) || '';
+  /* choose the clearest transcription: slash notation and a US reading first */
+  const ranked = ipas.filter(x => x.text).map(x => ({
+    t: x.text,
+    score: (/^\//.test(x.text.trim()) ? 2 : 0) + (/-us/i.test(x.audio || '') ? 2 : 0) - (/[\u0300-\u036f]/.test(x.text) ? 1 : 0)
+  })).sort((a, b) => b.score - a.score);
+  const withUs = ranked.length ? ranked[0] : null;
+  return {
+    w: String(data[0].word || word).toLowerCase(),
+    ipa: tidyIpa(withUs ? withUs.t : ''),
+    audio: usAudio,
+    e: guessIcon(defs.join(' '), data[0].word || word)
+  };
+}
+async function fetchEntry(word, ms){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms || 8000);
+  let res;
+  try {
+    res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word), {signal: ctrl.signal, mode: 'cors'});
+  } finally { clearTimeout(timer); }
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('http ' + res.status);
+  const data = await res.json();
+  return parseApi(data, word);
+}
+
+/* ---------- base form of a changed word ---------- */
+function regularCandidates(w){
+  const out = [];
+  const add = c => { if (c && c.length >= 2 && c !== w && out.indexOf(c) < 0) out.push(c); };
+  if (w.length >= 5 && w.endsWith('ied')) add(w.slice(0, -3) + 'y');
+  if (w.length >= 4 && w.endsWith('ies')) add(w.slice(0, -3) + 'y');
+  if (w.length >= 4 && w.endsWith('ed')) {
+    const stem = w.slice(0, -2);
+    add(stem);
+    if (stem.length >= 3 && stem[stem.length - 1] === stem[stem.length - 2]) add(stem.slice(0, -1));
+    add(w.slice(0, -1));
+  }
+  if (w.length >= 5 && w.endsWith('ing')) {
+    const stem = w.slice(0, -3);
+    if (stem.length >= 3 && stem[stem.length - 1] === stem[stem.length - 2]) add(stem.slice(0, -1));
+    add(stem);
+    add(stem + 'e');
+  }
+  if (w.length >= 3 && w.endsWith('es')) add(w.slice(0, -2));
+  if (w.length >= 3 && w.endsWith('s') && !/(ss|us|is)$/.test(w)) add(w.slice(0, -1));
+  return out;
+}
+function localData(word){
+  const l = LOCAL_MAP.get(word);
+  if (l) return {w: l.w, ipa: l.ipa, e: l.e, ex: l.ex, audio: ''};
+  const c = cache[word];
+  if (c) return {w: c.w || word, ipa: c.ipa || '', e: c.e || '✨', ex: '', audio: c.audio || ''};
+  const s = saved.find(x => x.w === word);
+  if (s) return {w: s.w, ipa: s.ipa || '', e: s.e || '✨', ex: s.ex || '', audio: s.audio || ''};
+  return null;
+}
+async function resolveBase(w){
+  if (LOCAL_MAP.has(w)) return null;                 /* it is already a base word */
+  const ir = IRREGULAR[w];
+  if (ir && ir !== w) {
+    const known = localData(ir);
+    if (known) return known;
+    try { const api = await fetchEntry(ir, 6000); if (api) { remember(ir, api); return api; } } catch (e) {}
+    return {w: ir, ipa: '', e: '✨', ex: '', audio: ''};
+  }
+  if (NOT_A_FORM.has(w)) return null;
+  const cands = regularCandidates(w);
+  if (!cands.length) return null;
+  for (const c of cands) {
+    const d = localData(c);
+    if (d) return d;
+  }
+  for (const c of cands.slice(0, 2)) {
+    try {
+      const api = await fetchEntry(c, 5000);
+      if (api) { remember(c, api); return api; }
+    } catch (e) {}
+  }
+  return null;
+}
+function remember(word, api){
+  cache[word] = {w: word, ipa: api.ipa || '', audio: api.audio || '', e: api.e || '✨'};
+  saveCache();
+}
+
+/* ---------- state ---------- */
+let current = null;
+let seq = 0;
+let lastWord = '';
+const resultEl = $('#result');
+const inputEl = $('#q');
+
+function isSaved(w){ return saved.some(s => s.w === w); }
+function emojiFor(w){
+  const l = LOCAL_MAP.get(w); if (l) return l.e;
+  const c = cache[w]; if (c && c.e) return c.e;
+  const s = saved.find(x => x.w === w); if (s && s.e) return s.e;
+  return '✨';
+}
+
+/* ---------- painting ---------- */
+let hintOpen = false;
+function paintCard(entry, opts = {}){
+  current = entry;
+  const on = isSaved(entry.w);
+  const base = opts.base || null;
+  const fromBadge = base ?
+    '<div class="from">' +
+      '<span class="lb">from</span><span class="arrow">👉</span>' +
+      '<button class="base-word" id="baseBtn" type="button">' + esc(base.w) + '</button>' +
+      (base.ipa ? '<span class="base-ipa">' + esc(base.ipa) + '</span>' : '') +
+      '<button class="mini" id="baseSay" type="button" aria-label="Play the base word">🔊</button>' +
+    '</div>' : '';
+  const hint =
+    '<div class="hint" id="hint"' + (hintOpen ? '' : ' hidden') + '>' +
+      '<div class="hint-pic"><span class="big-emoji">' + entry.e + '</span></div>' +
+      (entry.ex ? '<div class="ex"><button class="mini" id="btnEx" type="button" aria-label="Play the sentence">🔊</button><p>' + esc(entry.ex) + '</p></div>' : '') +
+    '</div>';
+  resultEl.innerHTML =
+    '<article class="card" style="--h:' + hue(entry.w) + '">' +
+      '<h2 class="word">' + esc(entry.w) + '</h2>' +
+      '<div class="ipa">' + esc(entry.ipa || '—') + '</div>' +
+      fromBadge +
+      '<div class="actions">' +
+        '<button class="btn listen" id="btnListen" type="button"><span class="ic">🔊</span> Listen</button>' +
+        '<button class="btn slow" id="btnSlow" type="button"><span class="ic">🐢</span> Slow</button>' +
+      '</div>' +
+      '<div class="bottom">' +
+        '<button class="hint-toggle" id="hintBtn" type="button">' + (hintOpen ? '🙈 Hide hint' : '👀 Picture Hint') + '</button>' +
+        '<button class="star' + (on ? ' on' : '') + '" id="starBtn" type="button" aria-label="Save word">' + (on ? '⭐' : '☆') + '</button>' +
+      '</div>' +
+      hint +
+      (opts.offline ? '<div class="tag">offline</div>' : '') +
+    '</article>';
+
+  $('#starBtn').addEventListener('click', toggleSave);
+  const bl = $('#btnListen'), bs = $('#btnSlow');
+  bl.addEventListener('click', () => { mark(bl); sparkle(bl); say(entry.w, false); });
+  bs.addEventListener('click', () => { mark(bs); sparkle(bs); say(entry.w, true); });
+  $('#hintBtn').addEventListener('click', () => {
+    hintOpen = !hintOpen;
+    $('#hint').hidden = !hintOpen;
+    $('#hintBtn').textContent = hintOpen ? '🙈 Hide hint' : '👀 Picture Hint';
+  });
+  const be = $('#btnEx');
+  if (be) be.addEventListener('click', () => say(entry.ex, false, {ttsOnly: true, audio: ''}));
+  const bw = $('#baseBtn');
+  if (bw) bw.addEventListener('click', () => { if (inputEl.blur) inputEl.blur(); show(base.w); });
+  const bsay = $('#baseSay');
+  if (bsay) bsay.addEventListener('click', () => say(base.w, false, {audio: base.audio || '', ttsOnly: !base.audio}));
+}
+function mark(btn){
+  document.querySelectorAll('.btn.playing').forEach(b => b.classList.remove('playing'));
+  btn.classList.add('playing');
+  setTimeout(() => btn.classList.remove('playing'), 2200);
+}
+function sparkle(btn){
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const s = document.createElement('span');
+  s.className = 'sparkle';
+  s.textContent = '✨';
+  btn.appendChild(s);
+  setTimeout(() => s.remove(), 750);
+}
+function paintMessage(kind, word){
+  current = null;
+  const map = {
+    welcome:  {face: '🐣', title: 'Pick a word!',     note: 'Tap a picture, or type a word.'},
+    thinking: {face: '🐥', title: 'Looking…',         note: ''},
+    letters:  {face: '🙈', title: 'English letters!', note: 'Type the word in English letters.'},
+    notfound: {face: '🙈', title: 'Oops, not found',  note: 'Let’s check the spelling once more.'},
+    offline:  {face: '📴', title: 'No internet',      note: 'Try again in a moment.'}
+  };
+  const m = map[kind] || map.welcome;
+  resultEl.innerHTML =
+    '<div class="msg">' +
+      '<span class="face">' + m.face + '</span>' +
+      '<b>' + esc(m.title) + '</b>' +
+      (word ? '<small>“' + esc(word) + '”</small>' : '') +
+      (m.note ? '<small>' + esc(m.note) + '</small>' : '') +
+      (kind === 'offline' ? '<button class="retry" type="button" id="retryBtn">Try again</button>' : '') +
+    '</div>';
+  const r = $('#retryBtn');
+  if (r) r.addEventListener('click', () => { if (lastWord) show(lastWord); });
+}
+
+/* ---------- the search ---------- */
+async function show(raw){
+  const w = norm(raw);
+  if (!w) { paintMessage('welcome'); return; }
+  lastWord = w;
+  inputEl.value = String(raw).trim();
+  refreshClear();
+  if (!/^[a-z' .\-]+$/.test(w)) { paintMessage('letters', String(raw).trim()); return; }
+  if (w.length > 40) { paintMessage('notfound', w); return; }
+
+  const mine = ++seq;
+  hintOpen = false;
+  const local = LOCAL_MAP.get(w);
+  const quick = localData(w);
+
+  if (quick) paintCard(quick);
+  else paintMessage('thinking');
+  addRecent(w);
+  if (quick && addStar(w)) praise();
+
+  /* a phrase from the picture book needs no online lookup */
+  if (local && w.indexOf(' ') > -1) return;
+
+  let api = null, failed = false;
+  const baseP = resolveBase(w).catch(() => null);
+  try { api = await fetchEntry(w); } catch (e) { failed = true; }
+  const base = await baseP;
+  if (mine !== seq) return;
+
+  if (!api) {
+    if (quick) {
+      paintCard(Object.assign({}, quick, {e: (base && base.e) || quick.e, ex: (base && base.ex) || quick.ex}), {base: base, offline: failed});
+    } else if (base) {
+      paintCard({w: w, ipa: '', e: base.e || '✨', ex: base.ex || '', audio: ''}, {base: base, offline: failed});
+    } else {
+      paintMessage(failed ? 'offline' : 'notfound', w);
+    }
+    return;
+  }
+
+  remember(w, api);
+  if (base && base.e) { cache[w].e = base.e; saveCache(); }
+  renderRecent();
+  paintCard({
+    w: w,
+    ipa: (local && local.ipa) || (quick && quick.ipa) || api.ipa || '',
+    e: (base && base.e) || (local && local.e) || (quick && quick.e) || api.e || '✨',
+    ex: (base && base.ex) || (quick && quick.ex) || '',
+    audio: api.audio || (quick && quick.audio) || ''
+  }, {base: base});
+  if (!quick && addStar(w)) praise();
+}
+
+/* ---------- praise stamp ---------- */
+let stampTimer = null;
+function praise(){
+  const el = $('#stamp');
+  el.textContent = 'Great! ⭐ ' + stars.n;
+  el.classList.add('in');
+  clearTimeout(stampTimer);
+  stampTimer = setTimeout(() => el.classList.remove('in'), 1100);
+}
+
+/* ---------- saved & recent ---------- */
+function addRecent(w){
+  recent = [w].concat(recent.filter(x => x !== w)).slice(0, 8);
+  writeJSON('sw.recent.v1', recent);
+  renderRecent();
+}
+function toggleSave(){
+  if (!current) return;
+  const w = current.w;
+  if (isSaved(w)) {
+    saved = saved.filter(s => s.w !== w);
+    toast('Removed');
+  } else {
+    saved = [{w: w, ipa: current.ipa || '', e: current.e || '✨', ex: current.ex || '', audio: current.audio || ''}]
+      .concat(saved.filter(s => s.w !== w)).slice(0, 40);
+    toast('Saved ⭐');
+  }
+  writeJSON('sw.saved.v1', saved);
+  const on = isSaved(w);
+  const star = $('#starBtn');
+  if (star) { star.textContent = on ? '⭐' : '☆'; star.classList.toggle('on', on); }
+  renderSaved();
+}
+function saveCache(){
+  const keys = Object.keys(cache);
+  if (keys.length > 300) keys.slice(0, keys.length - 300).forEach(k => delete cache[k]);
+  writeJSON('sw.cache.v1', cache);
+}
+function chip(word, em){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pill';
+  b.innerHTML = '<span class="em">' + em + '</span>' + esc(word);
+  b.addEventListener('click', () => { if (inputEl.blur) inputEl.blur(); show(word); });
+  return b;
+}
+function renderSaved(){
+  const box = $('#shelfSaved'), row = $('#rowSaved');
+  row.innerHTML = '';
+  saved.forEach(s => row.appendChild(chip(s.w, s.e || emojiFor(s.w))));
+  box.hidden = saved.length === 0;
+}
+function renderRecent(){
+  const box = $('#shelfRecent'), row = $('#rowRecent');
+  row.innerHTML = '';
+  recent.forEach(w => row.appendChild(chip(w, emojiFor(w))));
+  box.hidden = recent.length === 0;
+}
+
+/* ---------- toast ---------- */
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+/* ---------- wiring ---------- */
+$('#searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = inputEl.value;
+  if (inputEl.blur) inputEl.blur();
+  show(v);
+});
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); if (inputEl.blur) inputEl.blur(); show(inputEl.value); }
+});
+function refreshClear(){ $('#clearBtn').classList.toggle('show', inputEl.value.length > 0); }
+inputEl.addEventListener('input', refreshClear);
+$('#clearBtn').addEventListener('click', () => { inputEl.value = ''; refreshClear(); inputEl.focus(); });
+$('#clearRecent').addEventListener('click', () => { recent = []; writeJSON('sw.recent.v1', []); renderRecent(); });
+
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopSound(); });
+window.addEventListener('pagehide', stopSound);
+window.addEventListener('error', e => { try { console.warn('page error', e.message); } catch (err) {} });
+
+renderStars();
+renderSaved();
+renderRecent();
+paintMessage('welcome');
+refreshClear();
+</script>
+</body>
+</html>
